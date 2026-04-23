@@ -9,5 +9,7 @@ typedef struct
 } 
 image;
 
+void allocate_image(image *u, int m, int n);
+
 
 #endif
