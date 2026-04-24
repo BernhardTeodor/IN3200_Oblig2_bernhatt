@@ -6,10 +6,9 @@
 
 void test_allocate_image()
 {
-    
-    int m = 5; // col 
-    int n = 4; // row
-    double size = m*n*sizeof(double); 
+
+    int m = 5; // row 
+    int n = 4; // col
 
     image u;
 
@@ -17,7 +16,27 @@ void test_allocate_image()
 
     assert(u.m == m);
     assert(u.n == n);
-    assert(sizeof(u.image_data) == size); 
+
+    // Fill matrix
+
+    for(int i = 0; i < m; i++)
+    {
+        for(int j = 0; j < n; j++)
+        {
+            u.image_data[i][j] = (float)i+j;
+        }
+    }
+
+    for(int i = 0; i < m; i++)
+    {
+        for(int j = 0; j < n; j++)
+        {
+
+            assert((u.image_data[i][j]  - ((float)i+j))< 1e-7);
+        }
+    }
+
+    printf("success\n");    
 
     free(u.image_data[0]);
     free(u.image_data);
