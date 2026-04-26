@@ -21,12 +21,11 @@ void test_image_to_jpeg()
 
     convert_jpeg_to_image(actual, &u);
 
-
     unsigned char *new;
 
     new = (unsigned char*)malloc(m*n*sizeof(unsigned char));
-    convert_image_to_jpeg(&u, &new);
-
+    convert_image_to_jpeg(&u, new);
+    
     float tol = 1e-7;
 
     for(int i =0; i <(m*n); i++)
