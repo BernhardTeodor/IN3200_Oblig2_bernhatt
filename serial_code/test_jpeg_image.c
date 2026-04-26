@@ -8,6 +8,36 @@
 void test_convert_jpeg_to_image()
 {
 
+    int m = 3; //row
+    int n = 4;
+    image u;
+
+    unsigned char test[12] ={1,2,3,
+        4,5,6,
+        7,8,9,
+        10,11,12};
+
+    allocate_image(&u, m, n);
+
+    convert_jpeg_to_image(&test, &u);
+
+    float expected[3][4] ={
+        {1,2,3},{4,5,6},{7,8,9},{10,11,12}
+    };
+
+    float tol = 1e-7;
+
+    for(int i =0; i < m; i++)
+    {
+        for(int j = 0; j < n; j++)
+        {
+            float actual = u.image_data[i][j];
+            float expected_val = expected[i][j];
+            assert(abs(actual - expected_val) < tol);
+        }
+    }
+    printf("succsess\n");
+    
 }
 
 
