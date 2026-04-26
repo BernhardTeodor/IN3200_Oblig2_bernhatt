@@ -8,8 +8,8 @@
 void test_convert_jpeg_to_image()
 {
 
-    int m = 3; //row
-    int n = 4;
+    int m = 4; //row
+    int n = 3;
     image u;
 
     unsigned char test[12] ={1,2,3,
@@ -17,11 +17,12 @@ void test_convert_jpeg_to_image()
         7,8,9,
         10,11,12};
 
+
     allocate_image(&u, m, n);
 
-    convert_jpeg_to_image(&test, &u);
+    convert_jpeg_to_image(test, &u);
 
-    float expected[3][4] ={
+    float expected[4][3] ={
         {1,2,3},{4,5,6},{7,8,9},{10,11,12}
     };
 
@@ -37,7 +38,7 @@ void test_convert_jpeg_to_image()
         }
     }
     printf("succsess\n");
-    
+    deallocate_image(&u);
 }
 
 
