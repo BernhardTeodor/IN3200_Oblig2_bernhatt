@@ -19,22 +19,22 @@ void test_iso_diffusion_denoising()
     image u_bar;
     
     allocate_image(&u, m, n);
+    allocate_image(&u_bar, m, n);
     convert_jpeg_to_image(test_data, &u);
-    iso_diffusion_denoising(&u, &u_bar, 0.1, 2);
+    iso_diffusion_denoising(&u, &u_bar, 0.1, 3);
     
     float test_iso[16] = 
     {1,1,1,1, 
     1,22.688,26.768, 1,
-    1, 37.568, 37,808,1,
+    1, 37.568, 37.808,1,
     1,1,1,1};
-
 
     float tol = 1e-6;
     for(int i = 0; i < m; i++)
     {
         for(int j = 0; j<n; j++)
         {
-            assert(abs(u.image_data[i][j] - test_iso[i*n + j]) < tol);
+            assert(abs(u_bar.image_data[i][j] - test_iso[i*n + j]) < tol);
         }
     }
 
@@ -47,6 +47,6 @@ void test_iso_diffusion_denoising()
 
 int main()
 {
-
+    test_iso_diffusion_denoising();
     return(0);
 }
