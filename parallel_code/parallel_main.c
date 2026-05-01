@@ -31,7 +31,7 @@ int main(int argc, char *argv[])
     /* 1D horizontal decomposition of the m x n pixels evenly among the MPI processes */
     /* If there is a neighbor from below, allocate one more row; Same if there is neighbor from above */
 
-    int my_m = (int)m/num_procs; 
+    my_m = (int)m/num_procs; 
     int rest = m%num_procs;
 
     if(my_rank < rest)
@@ -39,6 +39,7 @@ int main(int argc, char *argv[])
         my_m +=1;
     }
 
+    my_image_chars = malloc(my_m * n * sizeof(unsigned char));
 
     allocate_image (&u, my_m, n);
     allocate_image (&u_bar, my_m, n);
@@ -46,6 +47,42 @@ int main(int argc, char *argv[])
     /* each process asks process 0 for a partitioned region */
     /* of image_chars and copy the values into u */
     /* ... */
+
+    if(my_rank == 0)
+    {
+        for(int i = 0; i < n*my_m; i++)
+        {
+            my_image_chars[i] = image_chars[i];
+        }
+    }
+
+    if(my_rank > 0)
+    {
+
+        MPI_Send(&my_m, 1, MPI_INT, 0,0,MPI_COMM_WORLD);
+        MPI_Recv(my_image_chars, n*my_m, MPI_UNSIGNED_CHAR,0,1,MPI_COMM_WORLD, MPI_STATUS_IGNORE);  
+
+    }
+
+    else
+    {
+        int prev = my_m;
+        int next; // Antall rader
+
+        for(int i = 1; i < num_procs; i++)
+        {
+            MPI_Recv(&next, 1, MPI_INT, i, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+
+            for(int j = 0; j < n*next; j++)
+            {
+                my_image_chars[j] = image_chars[i*prev*n + j];
+            }
+
+            prev = next;
+
+            MPI_Send(my_image_chars, n*next, MPI_UNSIGNED_CHAR, i  , 1, MPI_COMM_WORLD);
+        }
+    }
 
     convert_jpeg_to_image (my_image_chars, &u);
     iso_diffusion_denoising_parallel (&u, &u_bar, kappa, iters);
