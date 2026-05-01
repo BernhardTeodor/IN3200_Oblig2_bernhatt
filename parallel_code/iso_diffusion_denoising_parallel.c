@@ -40,17 +40,16 @@ void iso_diffusion_denoising_parallel(image *u, image *u_bar, float kappa, int i
             u_bar->image_data[i][n-1] =  u->image_data[i][n-1];
         }
 
+        for(int i = 0; i < n; i++)
+        {
+            sender_rad1[i] = u->image_data[0][i];
+            sender_radm[i] = u->image_data[m-1][i];
+        }
+
         if(my_rank == 0)
         {
-
-            for(int i = 0; i < n; i++)
-            {
-                u_bar->image_data[0][i] = u->image_data[0][i]; // toP OF IMAGE   
-                sender_radm[i] = u->image_data[m - 1][i];
-            }
-
-            MPI_Recv(under, n, MPI_FLOAT, (my_rank + 1), 100, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-            MPI_Send(sender_radm, n, MPI_FLOAT, (my_rank + 1), 200, MPI_COMM_WORLD);
+            MPI_Send(sender_radm, n, MPI_FLOAT, my_rank + 1, 1, MPI_COMM_WORLD);
+            MPI_Recv(under, n, MPI_FLOAT, my_rank + 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 
             for(int j = 1; j <= (n-2); j++)
             {
@@ -60,18 +59,21 @@ void iso_diffusion_denoising_parallel(image *u, image *u_bar, float kappa, int i
                 u_bar->image_data[m - 1][j] = u->image_data[m - 1][j] + kappa*s;
             }
         }
-        
-        if(my_rank  == num_procs - 1)
+        else if(my_rank  == num_procs - 1)
         {
-            
-            for(int i = 0; i < n; i++)
+
+            if(my_rank %2 == 0)
             {
-                u_bar->image_data[m - 1][i] = u->image_data[m - 1][i];
-                sender_rad1[i] = u->image_data[0][i];
+                MPI_Send(sender_rad1, n, MPI_FLOAT, my_rank - 1, 0, MPI_COMM_WORLD); 
+                MPI_Recv(over, n, MPI_FLOAT, my_rank - 1, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            }
+            else
+            {
+                MPI_Recv(over, n, MPI_FLOAT,my_rank - 1, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+                MPI_Send(sender_rad1, n, MPI_FLOAT, my_rank - 1, 0, MPI_COMM_WORLD); 
+                
             }
 
-            MPI_Recv(over, n, MPI_FLOAT, (my_rank - 1), 100, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-            MPI_Send(sender_rad1, n, MPI_FLOAT, (my_rank - 1), 200, MPI_COMM_WORLD);
 
             for(int j = 1; j <= (n-2); j++)
             {
@@ -85,18 +87,23 @@ void iso_diffusion_denoising_parallel(image *u, image *u_bar, float kappa, int i
         }
         else
         {
-
-            for(int i = 0; i < n; i++)
+            if (my_rank % 2 == 0) 
             {
-                sender_rad1[i] = u->image_data[0][i];
-                sender_radm[i] = u->image_data[m-1][i];
+
+                MPI_Send(sender_rad1, n, MPI_FLOAT, my_rank - 1, 0, MPI_COMM_WORLD); 
+                MPI_Send(sender_radm, n, MPI_FLOAT, my_rank + 1, 1, MPI_COMM_WORLD); 
+                MPI_Recv(over, n, MPI_FLOAT, my_rank - 1, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+                MPI_Recv(under, n, MPI_FLOAT, my_rank + 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+
+            } 
+            else 
+            {
+
+                MPI_Recv(over, n, MPI_FLOAT,my_rank - 1, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+                MPI_Recv(under, n, MPI_FLOAT, my_rank + 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+                MPI_Send(sender_rad1, n, MPI_FLOAT, my_rank - 1, 0, MPI_COMM_WORLD); 
+                MPI_Send(sender_radm, n, MPI_FLOAT, my_rank + 1, 1, MPI_COMM_WORLD);   
             }
-
-            MPI_Send(sender_rad1, n, MPI_FLOAT, (my_rank - 1), 100, MPI_COMM_WORLD);
-            MPI_Send(sender_radm, n, MPI_FLOAT, (my_rank + 1), 200, MPI_COMM_WORLD);
-
-            MPI_Recv(over, n, MPI_FLOAT, (my_rank  - 1), 200, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-            MPI_Recv(under, n, MPI_FLOAT, (my_rank  + 1), 100, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 
             for(int j = 1; j <= (n-2); j++)
             {
@@ -114,7 +121,7 @@ void iso_diffusion_denoising_parallel(image *u, image *u_bar, float kappa, int i
         }
 
         if(iter != (iters -1))
-        { 
+        {   
             image *temp = u;
             u = u_bar;
             u_bar = temp;

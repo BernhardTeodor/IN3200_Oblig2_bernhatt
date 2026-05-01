@@ -1,4 +1,6 @@
 #include "function_declarations.h"
+#include <stdio.h>
+#include <stdlib.h>
 #include <mpi.h>
 
 int main(int argc, char *argv[])
@@ -72,24 +74,24 @@ int main(int argc, char *argv[])
         MPI_Recv(my_image_chars, n*my_m, MPI_UNSIGNED_CHAR,0,1,MPI_COMM_WORLD, MPI_STATUS_IGNORE);  
 
     }
-
     else
     {
         int prev = my_m;
         int next; // Antall rader
-
+        unsigned char *sending;
         for(int i = 1; i < num_procs; i++)
         {
             MPI_Recv(&next, 1, MPI_INT, i, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            sending = malloc(n*next*sizeof(unsigned char));
 
             for(int j = 0; j < n*next; j++)
             {
-                my_image_chars[j] = image_chars[i*prev*n + j];
+                sending[j] = image_chars[i*prev*n + j];
             }
 
             prev = next;
-
-            MPI_Send(my_image_chars, n*next, MPI_UNSIGNED_CHAR, i  , 1, MPI_COMM_WORLD);
+            MPI_Send(sending, n*next, MPI_UNSIGNED_CHAR, i  , 1, MPI_COMM_WORLD);
+            free(sending);
         }
     }
 
@@ -100,6 +102,42 @@ int main(int argc, char *argv[])
     /* process 0 receives from each process incoming values and */
     /* copy them into the designated region of struct whole_image */
     /* ... */
+
+
+    if(my_rank == 0)
+    {
+        int initial_split = (int)m/num_procs;
+
+        for(int i = 0; i < my_m; i++)
+        {
+            for(int j = 0; j < n; j++)
+            {
+                whole_image.image_data[i][j] = u_bar.image_data[i][j];
+            }
+        }
+
+    int start = my_m;
+
+    for(int rank = 1; rank < num_procs ; rank++)
+    {
+        // HVor mange rader har rank 
+        int rows = initial_split;
+        if(rank < rest)
+        {
+            rows +=1;
+        }
+
+        MPI_Recv(whole_image.image_data[start], rows*n, MPI_FLOAT, rank, 5, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+
+        start += rows;
+
+
+    }
+    }
+    else
+    {
+        MPI_Send(u_bar.image_data[0], my_m*n, MPI_FLOAT, 0, 5, MPI_COMM_WORLD);
+    }
 
     if (my_rank==0) 
     {
