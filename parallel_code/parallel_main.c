@@ -76,9 +76,12 @@ int main(int argc, char *argv[])
     }
     else
     {
-        int prev = my_m;
+
         int next; // Antall rader
         unsigned char *sending;
+
+        int start = my_m;
+
         for(int i = 1; i < num_procs; i++)
         {
             MPI_Recv(&next, 1, MPI_INT, i, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
@@ -86,10 +89,10 @@ int main(int argc, char *argv[])
 
             for(int j = 0; j < n*next; j++)
             {
-                sending[j] = image_chars[i*prev*n + j];
+                sending[j] = image_chars[start*n + j];
             }
 
-            prev = next;
+            start += next;
             MPI_Send(sending, n*next, MPI_UNSIGNED_CHAR, i  , 1, MPI_COMM_WORLD);
             free(sending);
         }
@@ -116,23 +119,21 @@ int main(int argc, char *argv[])
             }
         }
 
-    int start = my_m;
+        int start = my_m;
 
-    for(int rank = 1; rank < num_procs ; rank++)
-    {
-        // HVor mange rader har rank 
-        int rows = initial_split;
-        if(rank < rest)
+        for(int rank = 1; rank < num_procs ; rank++)
         {
-            rows +=1;
+            // HVor mange rader har rank 
+            int rows = initial_split;
+            if(rank < rest)
+            {
+                rows +=1;
+            }
+
+            MPI_Recv(whole_image.image_data[start], rows*n, MPI_FLOAT, rank, 5, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            start += rows;
         }
 
-        MPI_Recv(whole_image.image_data[start], rows*n, MPI_FLOAT, rank, 5, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-
-        start += rows;
-
-
-    }
     }
     else
     {

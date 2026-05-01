@@ -59,3 +59,4 @@ dkms.conf
 !important_config.json # Example to exclude specific json file
 
 serial_code/serial_main
+parallel_code/parallel_main
