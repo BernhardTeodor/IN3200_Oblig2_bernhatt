@@ -69,15 +69,12 @@ int main(int argc, char *argv[])
 
     if(my_rank > 0)
     {
-
         MPI_Send(&my_m, 1, MPI_INT, 0,0,MPI_COMM_WORLD);
         MPI_Recv(my_image_chars, n*my_m, MPI_UNSIGNED_CHAR,0,1,MPI_COMM_WORLD, MPI_STATUS_IGNORE);  
-
     }
     else
     {
-
-        int next; // Antall rader
+        int next; 
         unsigned char *sending;
 
         int start = my_m;
@@ -123,7 +120,6 @@ int main(int argc, char *argv[])
 
         for(int rank = 1; rank < num_procs ; rank++)
         {
-            // HVor mange rader har rank 
             int rows = initial_split;
             if(rank < rest)
             {
@@ -133,7 +129,6 @@ int main(int argc, char *argv[])
             MPI_Recv(whole_image.image_data[start], rows*n, MPI_FLOAT, rank, 5, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
             start += rows;
         }
-
     }
     else
     {

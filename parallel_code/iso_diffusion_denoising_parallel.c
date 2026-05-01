@@ -21,7 +21,6 @@ void iso_diffusion_denoising_parallel(image *u, image *u_bar, float kappa, int i
     for(int iter = 0; iter < iters; iter ++)
     {
 
-        // Middel same serial
         for(int i = 1; i <= (m-2) ; i++)
         {
             for(int j = 1; j <= (n-2); j++)
@@ -33,7 +32,6 @@ void iso_diffusion_denoising_parallel(image *u, image *u_bar, float kappa, int i
             }
         }
 
-        // Fikser venstre og høyre kanter
         for(int i = 0; i < m; i++)
         {
             u_bar->image_data[i][0] = u->image_data[i][0];
@@ -89,16 +87,13 @@ void iso_diffusion_denoising_parallel(image *u, image *u_bar, float kappa, int i
         {
             if (my_rank % 2 == 0) 
             {
-
                 MPI_Send(sender_rad1, n, MPI_FLOAT, my_rank - 1, 0, MPI_COMM_WORLD); 
                 MPI_Send(sender_radm, n, MPI_FLOAT, my_rank + 1, 1, MPI_COMM_WORLD); 
                 MPI_Recv(over, n, MPI_FLOAT, my_rank - 1, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
                 MPI_Recv(under, n, MPI_FLOAT, my_rank + 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-
             } 
             else 
             {
-
                 MPI_Recv(over, n, MPI_FLOAT,my_rank - 1, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
                 MPI_Recv(under, n, MPI_FLOAT, my_rank + 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
                 MPI_Send(sender_rad1, n, MPI_FLOAT, my_rank - 1, 0, MPI_COMM_WORLD); 
@@ -117,7 +112,6 @@ void iso_diffusion_denoising_parallel(image *u, image *u_bar, float kappa, int i
 
                 u_bar->image_data[m - 1][j] = u->image_data[m - 1][j] + kappa*s_m;
             }
-
         }
 
         if(iter != (iters -1))
@@ -132,5 +126,4 @@ void iso_diffusion_denoising_parallel(image *u, image *u_bar, float kappa, int i
     free(under);
     free(over);
 
-   
 }
