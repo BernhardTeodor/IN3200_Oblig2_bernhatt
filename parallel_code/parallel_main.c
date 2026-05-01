@@ -15,7 +15,16 @@ int main(int argc, char *argv[])
     MPI_Comm_size (MPI_COMM_WORLD, &num_procs);
 
     /* read from command line: kappa, iters, input_jpeg_filename, output_jpeg_filename */
-    /* ... */
+
+    if(argc < 5)
+        {
+            printf("Remember commando line arguments: <kappa> <iters> <input_jpeg_filename> <outpu_jpeg_filename>\n");
+        }
+        
+    kappa = atof(argv[1]);
+    iters = atoi(argv[2]);
+    input_jpeg_filename = argv[3];
+    output_jpeg_filename = argv[4];
 
     if (my_rank==0) 
     {

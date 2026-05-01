@@ -4,20 +4,44 @@
 #include <mpi.h>
 #include <math.h>
 
+typedef struct
+{
+    float** image_data; /* a 2D array of floats */
+    int m; /* # pixels in vertical-direction */
+    int n; /* # pixels in horizontal-direction */
+} 
+image;
+
+
 
 int main(int argc, char *argv[])
 {
 
-    int m, n;
+    int m, n, c, iters;
     int my_m, my_rank, num_procs;
+    float kappa;
+    image u, u_bar, whole_image;
     unsigned char *image_chars, *my_image_chars;
+    char *input_jpeg_filename, *output_jpeg_filename;
+
+    if(argc < 5)
+    {
+        printf("Remember commando line arguments: <kappa> <iters> <input_jpeg_filename> <outpu_jpeg_filename>\n");
+    }
+    kappa = atof(argv[1]);
+    iters = atoi(argv[2]);
+    input_jpeg_filename = argv[3];
+    output_jpeg_filename = argv[4];
 
 
     MPI_Init (&argc, &argv);
     MPI_Comm_rank (MPI_COMM_WORLD, &my_rank);
     MPI_Comm_size (MPI_COMM_WORLD, &num_procs);
 
+    double tol = 1e-7;
 
+    // printf("Kappa = %f\n iters = %d, input_jpeg_filename = %s\n  output_jpeg_filename = %s\n", kappa, iters, input_jpeg_filename, output_jpeg_filename);
+    
     if (my_rank==0) 
     {
         m = 12; 
@@ -82,7 +106,6 @@ int main(int argc, char *argv[])
 
     if(my_rank == 1)
     {
-        double tol = 1e-7;
         for(int i = 0; i < my_m*n; i ++)
         {
             int val = my_image_chars[i];
